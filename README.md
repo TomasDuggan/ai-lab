@@ -17,7 +17,7 @@ No middle layer: the frontend hits the backend directly from the browser. No Nex
 **Backend**
 ```bash
 cd backend
-source venv/bin/activate
+source venv/Scripts/activate
 uvicorn main:app --reload
 ```
 → http://localhost:8000/docs
