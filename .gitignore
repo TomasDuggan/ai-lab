@@ -11,3 +11,4 @@ backend/*.pyc
 .env
 .env.local
 .DS_Store
+.vscode/

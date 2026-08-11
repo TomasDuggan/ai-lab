@@ -1,23 +1,23 @@
 # lab-ia
 
-Laboratorio de experimentos de IA (RAG, agentes, LLMOps). Cada experimento es una ruta nueva en el frontend, con su lógica real viviendo en el backend.
+AI experiments lab (RAG, agents, LLMOps). Each experiment is a new route in the frontend, with its real logic living in the backend.
 
-## Estructura
+## Structure
 
 ```
 lab-ia/
-├── frontend/   → Next.js + Tailwind (landing + rutas por experimento)
-├── backend/    → FastAPI (lógica de IA: RAG, agentes, LLM calls)
+├── frontend/   → Next.js + Tailwind (landing + routes per experiment)
+├── backend/    → FastAPI (AI logic: RAG, agents, LLM calls)
 ```
 
-Sin capa intermedia: el frontend pega directo al backend desde el browser. Sin API routes de Next.js por ahora.
+No middle layer: the frontend hits the backend directly from the browser. No Next.js API routes for now.
 
-## Levantar local
+## Running locally
 
 **Backend**
 ```bash
 cd backend
-source venv/bin/activate
+source venv/bin/activate  # auto-activates in VS Code (see .vscode/settings.json)
 uvicorn main:app --reload
 ```
 → http://localhost:8000/docs
@@ -29,15 +29,15 @@ npm run dev
 ```
 → http://localhost:3000
 
-## Experimentos
+## Experiments
 
-| Ruta   | Estado      | Descripción |
-|--------|-------------|-------------|
-| `/rag` | pendiente   | — |
+| Route  | Status    | Description |
+|--------|-----------|-------------|
+| `/rag` | pending   | — |
 
 ## Stack
 
-Next.js + Tailwind · FastAPI · Chroma (vector DB local) · OpenRouter (LLM, modelos `:free`) · sentence-transformers (embeddings locales)
+Next.js + Tailwind · FastAPI · Chroma (local vector DB) · OpenRouter (LLM, `:free` models) · sentence-transformers (local embeddings)
 
 ## Deploy
 
