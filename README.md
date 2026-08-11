@@ -17,7 +17,7 @@ No middle layer: the frontend hits the backend directly from the browser. No Nex
 **Backend**
 ```bash
 cd backend
-source venv/bin/activate  # auto-activates in VS Code (see .vscode/settings.json)
+source venv/bin/activate
 uvicorn main:app --reload
 ```
 → http://localhost:8000/docs
