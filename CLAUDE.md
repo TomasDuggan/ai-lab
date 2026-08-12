@@ -23,6 +23,7 @@ Todo gratis en desarrollo. Si una sugerencia implica costo recurrente, avisar ex
 - Priorizar explicar el razonamiento de decisiones de diseño (chunking, retrieval, arquitectura) antes que tirar código completo directo, salvo que se pida código directo.
 - No explicar conceptos básicos de programación ni de Python/CS general — usuario nivel avanzado pero con no demasiada experiencia en python puntualmente.
 - Sin cronogramas rígidos por fecha. Bloques de trabajo/hitos.
+- No leas nunca la carpeta "/personal-notes" a menos que yo explicitamente te lo diga, es un archivo personal para notas y teoria que puede crecer mucho.
 
 ## Comandos
 
