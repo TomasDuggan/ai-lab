@@ -1,4 +1,5 @@
 from retrieve import retrieve
+from generate_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
 from pathlib import Path
 import json
@@ -79,19 +80,34 @@ def main():
     eval_set = [
         {
             "query": "I want a fast-paced multiplayer shooter, something competitive",
-            "expected_games": ["Counter-Strike 2", "Apex Legends", "Farlight 84", "Titanfall® 2"],
+            "expected_games": [
+                "Counter-Strike 2", "Counter-Strike: Source", "Apex Legends", "Farlight 84",
+                "Titanfall® 2", "Team Fortress 2", "Battlefield™ V", "Battlefield™ 2042",
+                "Call of Duty®", "HELLDIVERS™ 2", "ULTRAKILL", "NARAKA: BLADEPOINT",
+            ],
+            # Destiny 2 is PvE-leaning but has real competitive PvP - borderline include.
         },
         {
             "query": "relaxing farming and life simulation game",
-            "expected_games": ["Stardew Valley"],
+            "expected_games": ["Stardew Valley", "DAVE THE DIVER"],
+            # Dave the Diver mixes sim/management with combat, still closer to "relaxing sim" than most.
         },
         {
             "query": "dark souls-like game with challenging combat and bosses",
-            "expected_games": ["DARK SOULS™: REMASTERED", "Sekiro™: Shadows Die Twice - GOTY Edition", "ELDEN RING"],
+            "expected_games": [
+                "DARK SOULS™: REMASTERED", "Sekiro™: Shadows Die Twice - GOTY Edition",
+                "ELDEN RING", "Hollow Knight", "Dead Cells", "Hades",
+            ],
+            # These share punishing combat, boss-focused design, and death-as-progression - the core soulslike DNA.
         },
         {
             "query": "open world game with dragons and magic",
-            "expected_games": ["The Elder Scrolls V: Skyrim", "Dragon's Dogma 2", "Baldur's Gate 3"],
+            "expected_games": [
+                "The Elder Scrolls V: Skyrim", "The Elder Scrolls V: Skyrim Special Edition",
+                "Dragon's Dogma 2", "Baldur's Gate 3", "The Elder Scrolls® Online",
+            ],
+            # BG3 is party-based/D&D not fully "open world" in the sandbox sense, but has
+            # dragons/magic centrally and large explorable areas - kept as a judgment call.
         },
     ]
 
@@ -99,8 +115,8 @@ def main():
     collection = client.get_collection("steam_games")
     model = SentenceTransformer("all-MiniLM-L6-v2")
 
-    n_results = 15
-    run_label = "baseline"
+    n_results = 10
+    run_label = f"Chunk size = {CHUNK_SIZE}, overlap = {CHUNK_OVERLAP}"
 
     results = run_evaluation(eval_set, model, collection, n_results)
     avg_recall = sum(r["recall"] for r in results) / len(results)

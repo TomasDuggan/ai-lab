@@ -8,7 +8,7 @@ Centralize the creation of chunks, embeddings and chroma setup
 
 # Chunking parameters
 CHUNK_SIZE = 800
-CHUNK_OVERLAP = 50
+CHUNK_OVERLAP = 30
 
 
 def main():

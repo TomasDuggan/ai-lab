@@ -100,12 +100,6 @@ retrieved in the first place. Two concrete causes found in this project:
    is the least "fixable" failure - there's no bad token to point at, it's
    a genuine limitation of how the embedding model reads meaning.
 
-**Working hypothesis from manual testing:** retrieval performs
-noticeably better when the query/domain vocabulary is distinctive (e.g.
-"soulslike", "dragons") and worse when the vocabulary is generic and
-shared across genres (e.g. "relaxing", "fast-paced"). Needs a proper
-evaluation set to confirm this isn't just a small-sample impression.
-
 **Important, and reassuring:** the LLM generation step, when properly
 instructed, is robust against bad context - it correctly excluded
 irrelevant retrieved games (e.g. Garry's Mod, The Elder Scrolls Online)

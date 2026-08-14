@@ -123,6 +123,6 @@ logic you build on top of Chroma - not something Chroma does for you.
 - Free tiers (Render/Railway) often have ephemeral filesystems - a folder
   generated at runtime may not survive a restart/redeploy.
 - At small scale (few hundred chunks), the pragmatic solution is committing
-  the Chroma folder to the repo, so it ships with the code on deploy.
+  the Chroma folder to the repo, so it ships with the code on deploy (if it's small).
 - Raw/intermediate files (`games.jsonl`, `chunks.jsonl`) are regenerable and
   don't need to be committed - only the final Chroma folder does.

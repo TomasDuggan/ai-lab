@@ -10,6 +10,7 @@ backend/*.pyc
 # backend - datos regenerables (pipeline de ingesta los recrea)
 backend/data/raw/
 backend/data/processed/
+backend/rag/test.py
 
 # generales
 .env
