@@ -10,10 +10,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 INPUT_FILE = Path(__file__).parent / 'data' / 'raw' / 'games.jsonl'
 OUTPUT_FILE = Path(__file__).parent / 'data' / 'processed' / 'chunks.jsonl'
 
-# Chunking parameters
-CHUNK_SIZE = 800
-CHUNK_OVERLAP = 75
-
 # Patrones a no romper (abreviaciones comunes)
 ABBREVIATIONS = ["vs", "sr", "sra", "dr", "dra", "etc", "aprox", "pag", "pp"]
 PLACEHOLDER_TEMPLATE = "§ABBREV_{}§"
@@ -57,69 +53,70 @@ def clean_chunk_boundaries(chunks):
 
     return cleaned
 
-# Inicializar splitter
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=CHUNK_SIZE,
-    chunk_overlap=CHUNK_OVERLAP,
-    separators=["\n\n", "\n", ". ", " ", ""]
-)
+def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
+    # Inicializar splitter
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ". ", " ", ""]
+    )
 
-stats = {
-    "games_processed": 0,
-    "total_chunks": 0,
-    "games_with_multiple_chunks": 0
-}
+    stats = {
+        "games_processed": 0,
+        "total_chunks": 0,
+        "games_with_multiple_chunks": 0
+    }
 
-with open(INPUT_FILE, "r", encoding="utf-8") as infile, \
-     open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
+    with open(INPUT_FILE, "r", encoding="utf-8") as infile, \
+        open(OUTPUT_FILE, "w", encoding="utf-8") as outfile:
 
-    for line in infile:
-        if not line.strip():
-            continue
+        for line in infile:
+            if not line.strip():
+                continue
 
-        game = json.loads(line)
-        stats["games_processed"] += 1
+            game = json.loads(line)
+            stats["games_processed"] += 1
 
-        # Extraer campos
-        about_text = game.get("about_the_game", "")
-        if not about_text:
-            continue
+            # Extraer campos
+            about_text = game.get("about_the_game", "")
+            if not about_text:
+                continue
 
-        # Campos a mantener como metadata
-        metadata = {
-            "name": game.get("name"),
-            "genres": game.get("genres", []),
-            "developers": game.get("developers", []),
-            "release_date": game.get("release_date"),
-            "short_description": game.get("short_description")
-        }
-
-        # Splitear el texto
-        protected_text, replacements = protect_abbreviations(about_text)
-        chunks_text = splitter.split_text(protected_text)
-        chunks_text = [restore_abbreviations(chunk, replacements) for chunk in chunks_text]
-        chunks_text = clean_chunk_boundaries(chunks_text)
-
-        if len(chunks_text) > 1:
-            stats["games_with_multiple_chunks"] += 1
-
-        # Generar objetos de chunk
-        for chunk_index, text in enumerate(chunks_text):
-            chunk_obj = {
-                "text": text,
-                "source_id": str(game.get("appid")),
-                "chunk_index": chunk_index,
-                "metadata": metadata
+            # Campos a mantener como metadata
+            metadata = {
+                "name": game.get("name"),
+                "genres": game.get("genres", []),
+                "developers": game.get("developers", []),
+                "release_date": game.get("release_date"),
+                "short_description": game.get("short_description")
             }
-            outfile.write(json.dumps(chunk_obj, ensure_ascii=False) + "\n")
-            stats["total_chunks"] += 1
 
-# Resumen
-avg_chunks = stats["total_chunks"] / stats["games_processed"] if stats["games_processed"] > 0 else 0
+            # Splitear el texto
+            protected_text, replacements = protect_abbreviations(about_text)
+            chunks_text = splitter.split_text(protected_text)
+            chunks_text = [restore_abbreviations(chunk, replacements) for chunk in chunks_text]
+            chunks_text = clean_chunk_boundaries(chunks_text)
 
-print("\n=== Chunking Summary ===")
-print(f"Total de juegos procesados: {stats['games_processed']}")
-print(f"Total de chunks generados: {stats['total_chunks']}")
-print(f"Promedio de chunks por juego: {avg_chunks:.2f}")
-print(f"Juegos con más de 1 chunk: {stats['games_with_multiple_chunks']}")
-print(f"Chunks guardados en: {OUTPUT_FILE.resolve()}")
+            if len(chunks_text) > 1:
+                stats["games_with_multiple_chunks"] += 1
+
+            # Generar objetos de chunk
+            for chunk_index, text in enumerate(chunks_text):
+                chunk_obj = {
+                    "text": text,
+                    "source_id": str(game.get("appid")),
+                    "chunk_index": chunk_index,
+                    "metadata": metadata
+                }
+                outfile.write(json.dumps(chunk_obj, ensure_ascii=False) + "\n")
+                stats["total_chunks"] += 1
+
+    # Resumen
+    avg_chunks = stats["total_chunks"] / stats["games_processed"] if stats["games_processed"] > 0 else 0
+
+    print("\n=== Chunking Summary ===")
+    print(f"Total de juegos procesados: {stats['games_processed']}")
+    print(f"Total de chunks generados: {stats['total_chunks']}")
+    print(f"Promedio de chunks por juego: {avg_chunks:.2f}")
+    print(f"Juegos con más de 1 chunk: {stats['games_with_multiple_chunks']}")
+    print(f"Chunks guardados en: {OUTPUT_FILE.resolve()}")

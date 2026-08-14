@@ -7,7 +7,7 @@ import chromadb
 
 CHROMA_DB_PATH = Path(__file__).parent / "data" / "chroma_db"
 CHROMA_COLLECTION_NAME = "steam_games"
-
+CHUNKS_FILE = Path(__file__).parent / "data" / "processed" / "chunks.jsonl"
 
 def load_chunks(file_path: str) -> list[dict]:
     chunks = []
@@ -65,14 +65,13 @@ def upsert_to_chroma(collection, chunks: list[dict], embeddings: np.ndarray):
 
 
 def main():
-    chunks_file = Path(__file__).parent / "data" / "processed" / "chunks.jsonl"
 
-    if not chunks_file.exists():
-        print(f"Error: {chunks_file} not found")
+    if not CHUNKS_FILE.exists():
+        print(f"Error: {CHUNKS_FILE} not found")
         return
 
-    print(f"Loading chunks from {chunks_file}")
-    chunks, embeddings = generate_embeddings(load_chunks(str(chunks_file)))
+    print(f"Loading chunks from {CHUNKS_FILE}")
+    chunks, embeddings = generate_embeddings(load_chunks(str(CHUNKS_FILE)))
     print(f"Loaded {len(chunks)} chunks with embeddings of dimension {embeddings.shape[1]}")
 
     collection = get_chroma_collection()

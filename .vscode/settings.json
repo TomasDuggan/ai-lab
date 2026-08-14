@@ -1,5 +1,25 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/backend/venv/Scripts/python.exe",
   "python.terminal.activateEnvironment": true,
-  "terminal.integrated.defaultProfile.windows": "Git Bash"
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+        {
+            "scope": "string.quoted.docstring.multi.python",
+            "settings": {
+                "foreground": "#6A9955"
+            }
+        },
+        {
+            "scope": [
+                "string.quoted.single.python",
+                "string.quoted.double.python",
+                "string.quoted.multi.python"
+            ],
+            "settings": {
+                "foreground": "#6A9955"
+            }
+        }
+    ]
+  }
 }

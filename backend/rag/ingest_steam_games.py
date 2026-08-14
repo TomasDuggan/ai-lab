@@ -1,10 +1,8 @@
 """
 Ingest Steam game data from appids and store in JSONL format.
 
-Reads appids from backend/rag_scripts/data/appids.txt, fetches data from Steam API,
+Reads appids from appids.txt, fetches data from Steam API,
 cleans and extracts relevant fields, saves to backend/data/raw/games.jsonl.
-
-How to run: cd to the file folder and run python ingest_steam_games.py
 """
 
 import json
