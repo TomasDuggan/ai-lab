@@ -18,7 +18,7 @@ def main():
     generate_embeddings(model)
 
     print(f"\nDone. chunk_size={CHUNK_SIZE}, chunk_overlap={CHUNK_OVERLAP}")
-    print("Run evaluation now to compare against baseline.")
+    print("Run embedding_eval now if you want to compare against baseline.")
 
 if __name__ == '__main__':
     main()

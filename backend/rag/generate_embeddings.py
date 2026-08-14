@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 import numpy as np
-from sentence_transformers import SentenceTransformer
 import chromadb
+import shutil
 
 
 CHROMA_DB_PATH = Path(__file__).parent / "data" / "chroma_db"
@@ -24,7 +24,7 @@ Notes:
 embeddings => Matrix(N, X), where N is the amount of chunks and X depends on the model (all-MiniLM-L6-v2 is 384).
 It basically results in a matrix, each row is a chunk, each column holds a normalized number, a whole row represents the "semantic" of a chunk.
 """
-def generate_embeddings(chunks: list[dict], model) -> tuple[list, np.ndarray]:
+def generate_embeddings_from_chunks(chunks: list[dict], model) -> tuple[list, np.ndarray]:
     texts = [chunk['text'] for chunk in chunks]
     print(f"Generating embeddings for {len(texts)} chunks...")
     embeddings = model.encode(texts, show_progress_bar=True)
@@ -33,8 +33,10 @@ def generate_embeddings(chunks: list[dict], model) -> tuple[list, np.ndarray]:
 
 
 def get_chroma_collection():
+    if CHROMA_DB_PATH.exists():
+        shutil.rmtree(CHROMA_DB_PATH)
+
     client = chromadb.PersistentClient(path=str(CHROMA_DB_PATH))
-    client.delete_collection(name=CHROMA_COLLECTION_NAME)
     return client.get_or_create_collection(name=CHROMA_COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
 
 
@@ -68,7 +70,7 @@ def generate_embeddings(model):
         return
 
     print(f"Loading chunks from {CHUNKS_FILE}")
-    chunks, embeddings = generate_embeddings(load_chunks(str(CHUNKS_FILE)), model)
+    chunks, embeddings = generate_embeddings_from_chunks(load_chunks(str(CHUNKS_FILE)), model)
     print(f"Loaded {len(chunks)} chunks with embeddings of dimension {embeddings.shape[1]}")
 
     collection = get_chroma_collection()
