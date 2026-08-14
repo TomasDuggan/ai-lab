@@ -53,6 +53,9 @@ def clean_chunk_boundaries(chunks):
 
     return cleaned
 
+"""
+Generates chunks, writing them on chunks.jsonl
+"""
 def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
     # Inicializar splitter
     splitter = RecursiveCharacterTextSplitter(

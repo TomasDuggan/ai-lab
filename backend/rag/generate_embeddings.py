@@ -24,10 +24,7 @@ Notes:
 embeddings => Matrix(N, X), where N is the amount of chunks and X depends on the model (all-MiniLM-L6-v2 is 384).
 It basically results in a matrix, each row is a chunk, each column holds a normalized number, a whole row represents the "semantic" of a chunk.
 """
-def generate_embeddings(chunks: list[dict], model_name: str = "all-MiniLM-L6-v2") -> tuple[list, np.ndarray]:
-    print(f"Loading model: {model_name}")
-    model = SentenceTransformer(model_name)
-
+def generate_embeddings(chunks: list[dict], model) -> tuple[list, np.ndarray]:
     texts = [chunk['text'] for chunk in chunks]
     print(f"Generating embeddings for {len(texts)} chunks...")
     embeddings = model.encode(texts, show_progress_bar=True)
@@ -37,6 +34,7 @@ def generate_embeddings(chunks: list[dict], model_name: str = "all-MiniLM-L6-v2"
 
 def get_chroma_collection():
     client = chromadb.PersistentClient(path=str(CHROMA_DB_PATH))
+    client.delete_collection(name=CHROMA_COLLECTION_NAME)
     return client.get_or_create_collection(name=CHROMA_COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
 
 
@@ -64,20 +62,16 @@ def upsert_to_chroma(collection, chunks: list[dict], embeddings: np.ndarray):
     )
 
 
-def main():
-
+def generate_embeddings(model):
     if not CHUNKS_FILE.exists():
         print(f"Error: {CHUNKS_FILE} not found")
         return
 
     print(f"Loading chunks from {CHUNKS_FILE}")
-    chunks, embeddings = generate_embeddings(load_chunks(str(CHUNKS_FILE)))
+    chunks, embeddings = generate_embeddings(load_chunks(str(CHUNKS_FILE)), model)
     print(f"Loaded {len(chunks)} chunks with embeddings of dimension {embeddings.shape[1]}")
 
     collection = get_chroma_collection()
     upsert_to_chroma(collection, chunks, embeddings)
     print(f"Persisted {collection.count()} chunks to Chroma at {CHROMA_DB_PATH}")
 
-
-if __name__ == "__main__":
-    main()
