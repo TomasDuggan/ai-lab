@@ -116,7 +116,7 @@ def extract_fields(appid: int, app_data: Dict[str, Any]) -> Optional[Dict[str, A
 
 def main():
     """Main ingestion pipeline."""
-    appids_file = Path(__file__).parent / 'data' / 'appids.txt'
+    appids_file = Path(__file__).parent / 'data' / 'steam_appids.txt'
     output_file = Path(__file__).parent / 'data' / 'raw' / 'games.jsonl'
 
     # Create output directory

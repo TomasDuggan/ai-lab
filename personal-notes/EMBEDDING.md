@@ -99,6 +99,47 @@ Conceptually:
 The individual similarity values are not "percent semantic similarity".
 They are scores indicating how aligned the two embedding vectors are.
 
+In practice, with real short text (e.g. game descriptions), values rarely
+approach the extremes. Strongly related texts tend to land around 0.5-0.65,
+not close to 1.0. Values near -1 are rare between texts of the same domain
+(e.g. all English game descriptions) - true opposites need very different
+domains (e.g. code vs poetry). Near-0 is the practical "unrelated" signal,
+not negative territory.
+
+## Distance vs similarity (important distinction)
+
+Cosine **similarity** and cosine **distance** are not the same number:
+
+    cosine_distance = 1 - cosine_similarity
+
+Vector databases (like Chroma) typically return **distance**, not
+similarity. This flips the reading direction:
+
+    similarity: higher = more similar   (1 = identical)
+    distance:   lower  = more similar   (0 = identical)
+
+Mixing these up silently gives wrong conclusions (e.g. reading a distance
+of 0.5 as "50% similar" when it actually means similarity ≈ 0.5, or reading
+it as good when the metric in use was actually L2, not cosine).
+
+## Euclidean distance (L2) vs cosine similarity
+
+Euclidean distance (L2) is the straight-line distance between two points -
+Pythagorean theorem extended to N dimensions. It depends on both the
+direction AND the magnitude of the vectors.
+
+Cosine similarity only measures the angle between two vectors, ignoring
+magnitude. This matters for text embeddings because vector magnitude often
+doesn't carry reliable semantic meaning - direction (what the text is about)
+is the meaningful signal.
+
+Important detail: if vectors are normalized (magnitude = 1, which
+sentence-transformers models like MiniLM typically do by default), cosine
+similarity and Euclidean distance produce mathematically equivalent
+rankings - they order results the same way, only the raw numbers differ in
+scale. So switching metrics may not change *which* results come back, only
+how interpretable the score is.
+
 ## Multiple chunks
 
 If one element produces multiple chunks:
@@ -111,8 +152,8 @@ Each chunk gets its own embedding and becomes its own point in the vector
 space.
 
 Chunks from the same document may be close to each other if their content is
-semantically related, but this is not guaranteed. The embedding model sees
-the text content, not the `source_id`.
+semantically related, but this is not guaranteed (eg: Half Life2 chunk-0 and chunk-1 was 0.56).
+The embedding model sees the text content, not the `source_id`.
 
 Therefore:
 
