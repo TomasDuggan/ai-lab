@@ -1,3 +1,4 @@
+from config import CHROMA_COLLECTION_NAME
 import json
 from pathlib import Path
 import numpy as np
@@ -6,7 +7,6 @@ import shutil
 
 
 CHROMA_DB_PATH = Path(__file__).parent / "data" / "chroma_db"
-CHROMA_COLLECTION_NAME = "steam_games"
 CHUNKS_FILE = Path(__file__).parent / "data" / "processed" / "chunks.jsonl"
 
 def load_chunks(file_path: str) -> list[dict]:

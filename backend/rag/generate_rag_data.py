@@ -1,3 +1,4 @@
+from config import EMBEDDING_MODEL_NAME, CHUNK_SIZE, CHUNK_OVERLAP
 from chunking import generate_chunks
 from generate_embeddings import generate_embeddings
 from sentence_transformers import SentenceTransformer
@@ -6,15 +7,11 @@ from sentence_transformers import SentenceTransformer
 Centralize the creation of chunks, embeddings and chroma setup
 """
 
-# Chunking parameters
-CHUNK_SIZE = 800
-CHUNK_OVERLAP = 30
-
 
 def main():
     generate_chunks(CHUNK_SIZE, CHUNK_OVERLAP)
 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    model = SentenceTransformer(EMBEDDING_MODEL_NAME)
     generate_embeddings(model)
 
     print(f"\nDone. chunk_size={CHUNK_SIZE}, chunk_overlap={CHUNK_OVERLAP}")

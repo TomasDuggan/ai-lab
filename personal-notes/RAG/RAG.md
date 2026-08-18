@@ -100,6 +100,14 @@ retrieved in the first place. Two concrete causes found in this project:
    is the least "fixable" failure - there's no bad token to point at, it's
    a genuine limitation of how the embedding model reads meaning.
 
+4. **Chunk-level search causes single documents to dominate the top-k.**
+   Since Chroma has no concept of "games", only independent chunk
+   vectors, a game with many chunks (e.g. one with a long
+   `about_the_game`) can occupy multiple slots in the top-k with itself,
+   crowding out genuinely different, relevant games. Solved by
+   deduplication (see below) - this was the single highest-impact fix
+   found in this project.
+
 **Important, and reassuring:** the LLM generation step, when properly
 instructed, is robust against bad context - it correctly excluded
 irrelevant retrieved games (e.g. Garry's Mod, The Elder Scrolls Online)
@@ -108,4 +116,110 @@ recommending them. Retrieval quality and generation quality are
 genuinely separate problems - good generation instructions don't fix
 bad retrieval, but they do limit the damage.
 
----
+## Diversity-aware retrieval (deduplication by parent document)
+
+Known pattern in mature RAG frameworks - LangChain/LlamaIndex call this
+"parent document retrieval," and the more general version (balancing
+relevance against diversity across *all* results, not just same-document
+duplicates) is **MMR (Maximal Marginal Relevance)**. Implemented manually
+here, at this scale, for full control and understanding rather than
+importing the abstraction.
+
+Mechanism: over-fetch more chunks than needed from Chroma (e.g.
+`n_results * 4`), then keep only the best-scoring chunk per unique game
+before truncating to the actual `n_results`. Chroma returns results
+already sorted by relevance, so keeping the first occurrence of each
+game name is sufficient - no manual re-sorting needed.
+
+```python
+def retrieve(query: str, model, collection, n_results: int = 5) -> list[dict]:
+    query_embedding = model.encode([query]).tolist()
+
+    query_results = collection.query(
+        query_embeddings=query_embedding,
+        n_results=n_results * 4  # over-fetch for dedup headroom
+    )
+
+    all_chunks = [...]  # flatten documents/metadatas/distances into dicts
+
+    seen_games = {}
+    for chunk in all_chunks:
+        if chunk["name"] not in seen_games:
+            seen_games[chunk["name"]] = chunk  # first = best, already sorted
+
+    return list(seen_games.values())[:n_results]
+```
+
+Why over-fetch instead of dedup-then-truncate: deduping only within the
+original `n_results` window would just leave you with fewer results
+whenever duplicates occur (e.g. 8 unique games instead of 10) - it
+doesn't give the dedup step room to actually find 10 *distinct* good
+candidates. Over-fetching first, then deduping, then truncating
+preserves the intended result count.
+
+## Evaluation set
+
+A fixed set of (query, expected_games) cases, re-run identically after
+any pipeline change, to get comparable scores over time instead of
+eyeballing a handful of manual queries each time.
+
+**Ground truth quality is the ceiling on what the evaluation can tell
+you.** An early version of this set used only 1-4 "obviously correct"
+games per query. This produced misleadingly high recall (0.65) - not
+because retrieval was good, but because the bar for "correct" was too
+narrow. Games that were genuinely valid matches (e.g. Hollow Knight for
+a "soulslike" query) but weren't in the hand-written expected list would
+silently punish the metric if they displaced an expected game from a
+size-limited top-k, without ever being credited for being a real answer.
+
+**Fix applied:** reviewed the *entire* corpus (not just games recalled
+from memory) against each query, and expanded `expected_games` to
+include every game that would reasonably count as a hit - not just the
+2-3 most obvious ones. This dropped the baseline recall from 0.65 to
+0.42 on the exact same retrieval code - the system didn't get worse, the
+measurement got honest. Also caught a real bug: "Apex Legends" was in an
+early expected list but was never actually ingested into the corpus -
+no retrieval change could ever have found it.
+
+**Metrics used:**
+
+- **Recall@k**: of the expected games, how many appeared in the top-k?
+  Doesn't penalize noise, only measures presence.
+- **Reciprocal Rank**: position of the *first* expected hit (1/rank).
+  Complements recall - a query can have recall=1.0 while its one
+  correct answer sits buried near the bottom of the results, which
+  recall alone can't distinguish from a top-1 hit.
+
+**Runs, same eval set, same corpus (77 games), comparable:**
+
+| Config                              | n_results | avg recall |
+|--------------------------------------|-----------|------------|
+| chunk_size=800, overlap=50           | 10        | 0.421      |
+| chunk_size=300, overlap=30           | 10        | 0.413      |
+| chunk_size=800, overlap=50 + dedup   | 10        | 0.504      |
+
+**Conclusion:** chunk_size, even changed drastically (800 -> 300), had
+no meaningful effect on recall - each config won on some queries and
+lost on others, netting out to noise-level difference. Diversity-aware
+deduplication was the only change that produced a clear, consistent
+improvement across nearly every case, by fixing failure mode 4 above.
+Failure modes 1-3 remain partially present after dedup (e.g. Counter-
+Strike 2 still never appears for the "competitive shooter" query) -
+chunking parameters were not the actual bottleneck for this corpus.
+
+## Is RAG even the right tool for this domain?
+
+Worth stating plainly: a public, stable-knowledge domain like Steam game
+descriptions is a **weak real-world case for RAG**. A base LLM already
+"knows" popular games well from training data - RAG here only helps for
+learning the pipeline mechanics, not for outperforming a plain LLM
+answer. In the worst observed case (Garry's Mod outranking Counter-
+Strike 2), RAG actively made the answer worse than an ungrounded LLM
+would likely have given.
+
+RAG earns its complexity when the LLM genuinely cannot know the answer:
+private/internal data, data that changes after the model's training
+cutoff, domains requiring source traceability, or narrow non-public
+jargon/documentation. None of those apply to public Steam game
+descriptions - noted here as a real conclusion of this project, not just
+a caveat.

@@ -1,3 +1,4 @@
+from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME
 from retrieve import retrieve
 from generate_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
@@ -112,8 +113,8 @@ def main():
     ]
 
     client = chromadb.PersistentClient(path=Path(__file__).parent / "data" / "chroma_db")
-    collection = client.get_collection("steam_games")
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+    collection = client.get_collection(CHROMA_COLLECTION_NAME)
+    model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     n_results = 10
     run_label = f"Chunk size = {CHUNK_SIZE}, overlap = {CHUNK_OVERLAP}"

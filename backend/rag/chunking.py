@@ -14,8 +14,8 @@ OUTPUT_FILE = Path(__file__).parent / 'data' / 'processed' / 'chunks.jsonl'
 ABBREVIATIONS = ["vs", "sr", "sra", "dr", "dra", "etc", "aprox", "pag", "pp"]
 PLACEHOLDER_TEMPLATE = "§ABBREV_{}§"
 
+"""Replace abbreviations with markers to avoid fake/wrong splitting."""
 def protect_abbreviations(text):
-    """Reemplaza abreviaciones con marcadores temporales para evitar splits falsas."""
     protected = text
     replacements = {}
     for i, abbrev in enumerate(ABBREVIATIONS):
@@ -26,16 +26,16 @@ def protect_abbreviations(text):
             replacements[i] = abbrev + "."
     return protected, replacements
 
+"""Restore original abbreviations."""
 def restore_abbreviations(text, replacements):
-    """Restaura las abreviaciones originales."""
     restored = text
     for i, abbrev in replacements.items():
         placeholder = PLACEHOLDER_TEMPLATE.format(i)
         restored = restored.replace(placeholder, abbrev)
     return restored
 
+"""Cleaner chunk separators."""
 def clean_chunk_boundaries(chunks):
-    """Mueve puntuación del inicio de chunks siguientes al final del anterior."""
     if not chunks:
         return chunks
 
@@ -57,7 +57,6 @@ def clean_chunk_boundaries(chunks):
 Generates chunks, writing them on chunks.jsonl
 """
 def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
-    # Inicializar splitter
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
@@ -80,12 +79,10 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
             game = json.loads(line)
             stats["games_processed"] += 1
 
-            # Extraer campos
             about_text = game.get("about_the_game", "")
             if not about_text:
                 continue
 
-            # Campos a mantener como metadata
             metadata = {
                 "name": game.get("name"),
                 "genres": game.get("genres", []),
@@ -94,7 +91,6 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
                 "short_description": game.get("short_description")
             }
 
-            # Splitear el texto
             protected_text, replacements = protect_abbreviations(about_text)
             chunks_text = splitter.split_text(protected_text)
             chunks_text = [restore_abbreviations(chunk, replacements) for chunk in chunks_text]
@@ -103,7 +99,6 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
             if len(chunks_text) > 1:
                 stats["games_with_multiple_chunks"] += 1
 
-            # Generar objetos de chunk
             for chunk_index, text in enumerate(chunks_text):
                 chunk_obj = {
                     "text": text,
@@ -114,7 +109,6 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
                 outfile.write(json.dumps(chunk_obj, ensure_ascii=False) + "\n")
                 stats["total_chunks"] += 1
 
-    # Resumen
     avg_chunks = stats["total_chunks"] / stats["games_processed"] if stats["games_processed"] > 0 else 0
 
     print("\n=== Chunking Summary ===")

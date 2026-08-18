@@ -14,8 +14,8 @@ import urllib.request
 import urllib.error
 
 
+"""Load and deduplicate appids from text file (comma-separated)."""
 def load_appids(file_path: Path) -> set[int]:
-    """Load and deduplicate appids from text file (comma-separated)."""
     with open(file_path, 'r') as f:
         content = f.read()
 
@@ -28,8 +28,8 @@ def load_appids(file_path: Path) -> set[int]:
     return deduplicated
 
 
+"""Clean HTML tags and normalize whitespace."""
 def clean_html(html_text: str) -> str:
-    """Clean HTML tags and normalize whitespace."""
     if not html_text:
         return ""
 
@@ -51,8 +51,8 @@ def clean_html(html_text: str) -> str:
     return text.strip()
 
 
+"""Fetch app details from Steam API."""
 def fetch_app_details(appid: int) -> Optional[Dict[str, Any]]:
-    """Fetch app details from Steam API."""
     url = f"https://store.steampowered.com/api/appdetails?appids={appid}&l=english"
 
     try:
@@ -75,8 +75,8 @@ def fetch_app_details(appid: int) -> Optional[Dict[str, Any]]:
         return None
 
 
+"""Extract and clean relevant fields from app data."""
 def extract_fields(appid: int, app_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Extract and clean relevant fields from app data."""
     try:
         extracted = {
             'appid': appid,
@@ -112,8 +112,8 @@ def extract_fields(appid: int, app_data: Dict[str, Any]) -> Optional[Dict[str, A
     return None
 
 
+"""Main ingestion pipeline."""
 def main():
-    """Main ingestion pipeline."""
     appids_file = Path(__file__).parent / 'data' / 'steam_appids.txt'
     output_file = Path(__file__).parent / 'data' / 'raw' / 'games.jsonl'
 
