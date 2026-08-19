@@ -1,4 +1,4 @@
-from config import EMBEDDING_MODEL_NAME, CHUNK_SIZE, CHUNK_OVERLAP
+from config import EMBEDDING_MODEL_NAME, CHUNK_SIZE, CHUNK_OVERLAP, DIVERSITY_AWARE_RETREIVAL
 from chunking import generate_chunks
 from generate_embeddings import generate_embeddings
 from sentence_transformers import SentenceTransformer
@@ -14,7 +14,7 @@ def main():
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
     generate_embeddings(model)
 
-    print(f"\nDone. chunk_size={CHUNK_SIZE}, chunk_overlap={CHUNK_OVERLAP}")
+    print(f"\nDone. chunk_size={CHUNK_SIZE}, chunk_overlap={CHUNK_OVERLAP}, model = {EMBEDDING_MODEL_NAME}, diversity aware retreival = {DIVERSITY_AWARE_RETREIVAL}")
     print("Run embedding_eval now if you want to compare against baseline.")
 
 if __name__ == '__main__':

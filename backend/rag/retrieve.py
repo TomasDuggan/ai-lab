@@ -1,14 +1,14 @@
+from config import DIVERSITY_AWARE_RETREIVAL
+
 """
 Retrieve chunks from de VectorDB based on closeness
 """
-
-
 def retrieve(user_query: str, model, collection, n_results: int = 5) -> list[dict]:
     query_embedding = model.encode([user_query]).tolist()
     
     query_results = collection.query(
         query_embeddings=query_embedding,
-        n_results=n_results * 4 # Go overboard for diversity
+        n_results=n_results * DIVERSITY_AWARE_RETREIVAL # Go overboard for diversity
     )
 
     chunks = []

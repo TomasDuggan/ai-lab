@@ -1,4 +1,4 @@
-from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME
+from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME, DIVERSITY_AWARE_RETREIVAL
 from retrieve import retrieve
 from generate_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
@@ -84,7 +84,7 @@ def main():
             "expected_games": [
                 "Counter-Strike 2", "Counter-Strike: Source", "Apex Legends", "Farlight 84",
                 "Titanfall® 2", "Team Fortress 2", "Battlefield™ V", "Battlefield™ 2042",
-                "Call of Duty®", "HELLDIVERS™ 2", "ULTRAKILL", "NARAKA: BLADEPOINT",
+                "Call of Duty®", "HELLDIVERS™ 2", "ULTRAKILL", "NARAKA: BLADEPOINT", "Destiny 2"
             ],
             # Destiny 2 is PvE-leaning but has real competitive PvP - borderline include.
         },
@@ -117,7 +117,7 @@ def main():
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     n_results = 10
-    run_label = f"Chunk size = {CHUNK_SIZE}, overlap = {CHUNK_OVERLAP}"
+    run_label = f"Chunk size = {CHUNK_SIZE}, overlap = {CHUNK_OVERLAP}. Model = {EMBEDDING_MODEL_NAME}. Diversity aware retreival = {DIVERSITY_AWARE_RETREIVAL}"
 
     results = run_evaluation(eval_set, model, collection, n_results)
     avg_recall = sum(r["recall"] for r in results) / len(results)

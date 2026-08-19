@@ -207,7 +207,57 @@ Failure modes 1-3 remain partially present after dedup (e.g. Counter-
 Strike 2 still never appears for the "competitive shooter" query) -
 chunking parameters were not the actual bottleneck for this corpus.
 
-## Is RAG even the right tool for this domain?
+
+## Embedding model choice matters more than chunking or dedup alone
+
+After fixing the ground-truth quality issue and applying deduplication,
+the single biggest lever turned out to be the embedding model itself -
+bigger than chunk_size or dedup individually.
+
+| Config                                                    | n_results | avg recall |
+|------------------------------------------------------------|-----------|------------|
+| chunk_size=800, overlap=50 + dedup, MiniLM (384 dim)        | 10        | 0.504      |
+| chunk_size=800, overlap=50 + dedup, mpnet-base-v2 (768 dim) | 10        | 0.783      |
+
+Switching from `all-MiniLM-L6-v2` to `all-mpnet-base-v2` (both free,
+local, via sentence-transformers - larger model, slower to encode, same
+zero-cost dev setup) pushed two of the four eval cases to a perfect
+1.00 recall (relaxing/life-sim and soulslike), where MiniLM had
+consistently confused adjacent genres (failure mode 3 above). This
+confirms failure mode 3 was primarily a **model capacity** limitation,
+not something chunk_size or dedup could fix on their own - a smaller
+embedding model appears to encode genre-adjacent vocabulary (e.g.
+"build", "craft", "survive") too close together regardless of how the
+source text is chunked.
+
+Dedup was still necessary to see this gain clearly - without it, a
+better embedding model would still lose top-k slots to the same game's
+duplicate chunks.
+
+**Remaining gap:** the "competitive shooter" query stayed the weakest
+case (0.33-0.42 across all configs) even with the better model. Counter-
+Strike 2 still never appeared in the top-10, and Garry's Mod (failure
+modes 1+2 combined: broad-topic dilution *and* literally naming other
+shooters in its text) kept surfacing. This suggests the remaining gap is
+closer to failure modes 1/2 (content-level noise) than to raw embedding
+model quality - the kind of problem better addressed by hybrid
+(keyword + semantic) search or content cleanup, not a bigger embedding
+model.
+
+**Practical note on evaluation set maintenance:** re-running the
+evaluation after this model change also surfaced a second real
+ground-truth gap - Destiny 2 (explicitly described as having
+"Competitive Multiplayer" in its own text) was missing from the
+shooter query's `expected_games`. Half-Life 2, by contrast, was
+deliberately left out despite technically including a Deathmatch mode -
+a genuine judgment call (single-player campaign as its primary identity)
+rather than an oversight. Worth remembering: every time retrieval
+genuinely improves, it tends to expose gaps in the expected list that
+weren't visible before, simply because better retrieval surfaces
+borderline-legitimate candidates more often - eval sets need occasional
+re-review, not just one-time curation.
+
+## Is RAG even the right tool for this domain (games)?
 
 Worth stating plainly: a public, stable-knowledge domain like Steam game
 descriptions is a **weak real-world case for RAG**. A base LLM already
