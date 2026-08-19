@@ -180,3 +180,40 @@ def generate_embeddings(
 
     return chunks, embeddings
 ```
+
+## Decisions made in this project
+
+- **Switched from `all-MiniLM-L6-v2` to `all-mpnet-base-v2` after
+  measuring, not guessing**: both free, local, via sentence-transformers -
+  no cost difference, only slower encoding for the larger model (768 vs
+  384 dimensions). Compared with the exact same evaluation set, same
+  corpus (77 games), same chunking and dedup config: avg recall went from
+  0.504 (MiniLM) to 0.783 (mpnet). Two of four eval cases hit a perfect
+  1.00 recall with the larger model, where MiniLM had consistently
+  confused semantically-adjacent genres (see "Problems encountered"
+  below). This was the single biggest improvement found across the whole
+  project - bigger than any chunking or retrieval-logic change - meaning
+  embedding model choice mattered more than how the text was split or how
+  results were deduplicated.
+
+- **Same model must be used for corpus and query, enforced by design, not
+  just known in theory**: both `generate_embeddings.py` (indexing) and
+  the retrieval code load the model name from one shared constant, rather
+  than hardcoding the model string separately in each script - avoiding a
+  silent mismatch between the model used to embed the corpus and the one
+  used to embed incoming queries, which would make the vectors
+  incomparable without any error being raised.
+
+## Problems encountered
+
+- **A smaller embedding model conflates genre-adjacent vocabulary,
+  independent of chunking or dedup**: with `all-MiniLM-L6-v2`, a query
+  like "relaxing farming and life simulation game" retrieved survival
+  games (The Forest, DayZ) ahead of the actual match (Stardew Valley).
+  Both genres share surface vocabulary ("build", "craft", "gather
+  resources", "daily life"), and the smaller model's embeddings placed
+  them too close together in vector space despite being thematically
+  distinct genres. Neither reducing chunk_size nor deduplicating results
+  fixed this - the fix was a larger embedding model (see Decisions
+  above), confirming this was a model-capacity limitation, not a
+  chunking or retrieval-logic problem.

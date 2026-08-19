@@ -106,14 +106,14 @@ result, ordered best-to-worst according to the metric in use.
 
 ## Chunk-level search, not document-level
 
-Chroma has no concept of "games" or documents - only individual chunk
+Chroma has no concept of the domain or documents - only individual chunk
 vectors as independent points. A query compares against every chunk
 separately; there's no automatic grouping by `source_id`.
 
-Consequence: the same game can appear multiple times in a top-k result (once
-per matching chunk), while other chunks from that same game may not appear
+Consequence: the same document (eg. steam game) can appear multiple times in a top-k result (once
+per matching chunk), while other chunks from that same document may not appear
 at all, even if intuitively "they should go together." Any logic like
-deduplicating by game or merging all chunks from a matched game is retrieval
+deduplicating by document or merging all chunks from a matched document is retrieval
 logic you build on top of Chroma - not something Chroma does for you.
 
 ## Deploy considerations (small-scale, free-tier)
@@ -126,3 +126,60 @@ logic you build on top of Chroma - not something Chroma does for you.
   the Chroma folder to the repo, so it ships with the code on deploy (if it's small).
 - Raw/intermediate files (`games.jsonl`, `chunks.jsonl`) are regenerable and
   don't need to be committed - only the final Chroma folder does.
+
+## Decisions made in this project
+
+- **Explicit cosine distance metric**: created the collection with
+  `metadata={"hnsw:space": "cosine"}` instead of leaving Chroma's default
+  (L2/Euclidean). Chosen for interpretability - cosine keeps results
+  bounded in a familiar [0, 2] distance range and matches the similarity
+  metric already used and understood from the embeddings work, avoiding
+  having to reason in two different, incompatible scales.
+
+- **Persistent folder committed to git, raw/processed data excluded**: the
+  `chroma_db/` folder (SQLite + HNSW index files) is committed as-is to
+  the repo, while `games.jsonl` and `chunks.jsonl` are gitignored.
+  Reasoning: those source files are regenerable by re-running the
+  ingestion pipeline, but `chroma_db/` is the actual artifact the server
+  needs to answer queries without running the full pipeline on deploy -
+  especially relevant given free-tier hosts (Render/Railway) often have
+  ephemeral filesystems that won't reliably persist anything generated at
+  runtime.
+
+- **Verified size before committing, didn't assume**: checked
+  `du -sh chroma_db/` (2.8MB for 255 chunks) before deciding to commit it
+  wholesale - confirmed it wasn't a problem for git at this scale rather
+  than assuming it would be fine.
+
+- **Chose to pass embeddings explicitly instead of using Chroma's default
+  embedding function**: computed embeddings with sentence-transformers and
+  passed them directly via `embeddings=...` on `upsert()`/`query()`,
+  rather than letting Chroma embed text internally. Motivated by control
+  and understanding (the embeddings step was already built and understood
+  independently) and by avoiding a theoretical risk: if the model used at
+  insert time and query time ever diverged, results would silently stop
+  being comparable, with no error raised. Not based on a direct comparison
+  against Chroma's default embedding function - unknown what model it
+  uses internally, or whether it would have performed better or worse.
+
+## Problems encountered
+
+- **`delete_collection()` doesn't reliably clean up on-disk index
+  files**: while iterating on different `chunk_size` values via a
+  centralized regeneration script, `client.delete_collection()` followed
+  by `get_or_create_collection()` sometimes left orphaned HNSW index
+  folders on disk (each collection recreation gets a new internal UUID,
+  and by extension a new hashed folder). Fixed by forcing
+  `shutil.rmtree(CHROMA_DB_PATH)` before recreating the client/collection
+  from scratch, rather than trusting Chroma's own deletion to fully clean
+  up - more brutal, but reliable.
+
+- **`upsert()` doesn't remove stale ids from prior runs**: `upsert` only
+  adds/updates entries by id, it never deletes ones that are no longer
+  present in the current run. This matters when changing `chunk_size`
+  between runs - moving from a config that produced more chunks to one
+  that produces fewer leaves the extra old chunk ids (e.g. `220_2`,
+  `220_3`) orphaned in the collection, silently contaminating it with
+  data from a previous configuration. Solved by always wiping and
+  recreating the collection fully before each `upsert`, instead of
+  relying on `upsert` as a sync mechanism.
