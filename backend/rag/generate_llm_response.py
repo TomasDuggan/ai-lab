@@ -2,7 +2,7 @@ import os
 from config import EMBEDDING_MODEL_NAME, CHROMA_STEAM_GAMES_COLLECTION_NAME, DATA_DIR
 from dotenv import load_dotenv
 from openai import OpenAI
-from backend.rag.retrieve_steam_games import retrieve
+from backend.rag.retrieve.retrieve_steam_games import retrieve
 
 import chromadb
 from sentence_transformers import SentenceTransformer
