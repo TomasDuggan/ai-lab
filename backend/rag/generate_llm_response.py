@@ -1,10 +1,9 @@
 import os
-from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME
+from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME, DATA_DIR
 from dotenv import load_dotenv
 from openai import OpenAI
 from retrieve import retrieve
 
-from pathlib import Path
 import chromadb
 from sentence_transformers import SentenceTransformer
 
@@ -73,7 +72,7 @@ def generate_answer(messages: list[dict]) -> str:
     return response.choices[0].message.content
 
 def main():
-    client_ = chromadb.PersistentClient(path=Path(__file__).parent / "data" / "chroma_db")
+    client_ = chromadb.PersistentClient(path=DATA_DIR / "chroma_db")
     collection = client_.get_collection(CHROMA_COLLECTION_NAME)
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 

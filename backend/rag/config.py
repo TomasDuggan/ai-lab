@@ -1,3 +1,14 @@
+from pathlib import Path
+
+# Project
+RAG_ROOT = Path(__file__).resolve().parent
+
+DATA_DIR = RAG_ROOT / "data"
+RAW_DIR = DATA_DIR / "raw"
+PROCESSED_DIR = DATA_DIR / "processed"
+
+POLICIES_DIR = RAW_DIR / "northwind_analytics" / "policies"
+
 # Chunking parameters
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 30

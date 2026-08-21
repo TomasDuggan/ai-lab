@@ -2,7 +2,7 @@ from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME, DIVERSITY_AWARE
 from retrieve import retrieve
 from generate_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
-from pathlib import Path
+from config import PROCESSED_DIR, DATA_DIR
 import json
 from datetime import datetime
 
@@ -71,7 +71,7 @@ def save_evaluation_run(results: list[dict], avg_recall: float, n_results: int, 
         "cases": results,
     }
 
-    history_path = Path(__file__).parent / "data" / "processed" / "eval_history.jsonl"
+    history_path = PROCESSED_DIR / "eval_history.jsonl"
     with open(history_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(run, ensure_ascii=False) + "\n")
 
@@ -112,7 +112,7 @@ def main():
         },
     ]
 
-    client = chromadb.PersistentClient(path=Path(__file__).parent / "data" / "chroma_db")
+    client = chromadb.PersistentClient(path=DATA_DIR / "chroma_db")
     collection = client.get_collection(CHROMA_COLLECTION_NAME)
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 

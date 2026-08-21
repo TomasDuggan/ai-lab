@@ -1,5 +1,5 @@
 from config import EMBEDDING_MODEL_NAME, CHUNK_SIZE, CHUNK_OVERLAP, DIVERSITY_AWARE_RETREIVAL
-from chunking import generate_chunks
+from backend.rag.chunking.chunking_steam_games import generate_chunks
 from generate_embeddings import generate_embeddings
 from sentence_transformers import SentenceTransformer
 

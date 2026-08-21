@@ -5,10 +5,10 @@ Reads appids from appids.txt, fetches data from Steam API,
 cleans and extracts relevant fields, saves to backend/data/raw/games.jsonl.
 """
 
+from rag.config import RAW_DIR
 import json
 import time
 import re
-from pathlib import Path
 from typing import Optional, Dict, Any
 import urllib.request
 import urllib.error
@@ -114,8 +114,8 @@ def extract_fields(appid: int, app_data: Dict[str, Any]) -> Optional[Dict[str, A
 
 """Main ingestion pipeline."""
 def main():
-    appids_file = Path(__file__).parent / 'data' / 'raw' / 'steam_appids.txt'
-    output_file = Path(__file__).parent / 'data' / 'raw' / 'games.jsonl'
+    appids_file = RAW_DIR / 'steam_appids.txt'
+    output_file = RAW_DIR / 'games.jsonl'
 
     # Create output directory
     output_file.parent.mkdir(parents=True, exist_ok=True)

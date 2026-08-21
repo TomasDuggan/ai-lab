@@ -1,14 +1,13 @@
 """
 Generate chunks for games.json
 """
-
+from rag.config import RAW_DIR, PROCESSED_DIR
 import json
 import re
-from pathlib import Path
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-INPUT_FILE = Path(__file__).parent / 'data' / 'raw' / 'games.jsonl'
-OUTPUT_FILE = Path(__file__).parent / 'data' / 'processed' / 'chunks.jsonl'
+INPUT_FILE = RAW_DIR / 'games.jsonl'
+OUTPUT_FILE = PROCESSED_DIR / 'steam_games_chunks.jsonl'
 
 # Patrones a no romper (abreviaciones comunes)
 ABBREVIATIONS = ["vs", "sr", "sra", "dr", "dra", "etc", "aprox", "pag", "pp"]
@@ -64,9 +63,9 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
     )
 
     stats = {
-        "games_processed": 0,
+        "documents_processed": 0,
         "total_chunks": 0,
-        "games_with_multiple_chunks": 0
+        "documents_with_multiple_chunks": 0
     }
 
     with open(INPUT_FILE, "r", encoding="utf-8") as infile, \
@@ -77,7 +76,7 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
                 continue
 
             game = json.loads(line)
-            stats["games_processed"] += 1
+            stats["documents_processed"] += 1
 
             about_text = game.get("about_the_game", "")
             if not about_text:
@@ -97,7 +96,7 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
             chunks_text = clean_chunk_boundaries(chunks_text)
 
             if len(chunks_text) > 1:
-                stats["games_with_multiple_chunks"] += 1
+                stats["documents_with_multiple_chunks"] += 1
 
             for chunk_index, text in enumerate(chunks_text):
                 chunk_obj = {
@@ -109,11 +108,11 @@ def generate_chunks(chunk_size: int = 800, chunk_overlap: int = 50):
                 outfile.write(json.dumps(chunk_obj, ensure_ascii=False) + "\n")
                 stats["total_chunks"] += 1
 
-    avg_chunks = stats["total_chunks"] / stats["games_processed"] if stats["games_processed"] > 0 else 0
+    avg_chunks = stats["total_chunks"] / stats["documents_processed"] if stats["documents_processed"] > 0 else 0
 
     print("\n=== Chunking Summary ===")
-    print(f"Total de juegos procesados: {stats['games_processed']}")
+    print(f"Total de juegos procesados: {stats['documents_processed']}")
     print(f"Total de chunks generados: {stats['total_chunks']}")
     print(f"Promedio de chunks por juego: {avg_chunks:.2f}")
-    print(f"Juegos con más de 1 chunk: {stats['games_with_multiple_chunks']}")
+    print(f"Juegos con más de 1 chunk: {stats['documents_with_multiple_chunks']}")
     print(f"Chunks guardados en: {OUTPUT_FILE.resolve()}")
