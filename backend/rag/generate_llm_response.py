@@ -1,5 +1,5 @@
 import os
-from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME, DATA_DIR
+from config import EMBEDDING_MODEL_NAME, CHROMA_STEAM_GAMES_COLLECTION_NAME, DATA_DIR
 from dotenv import load_dotenv
 from openai import OpenAI
 from retrieve import retrieve
@@ -73,7 +73,7 @@ def generate_answer(messages: list[dict]) -> str:
 
 def main():
     client_ = chromadb.PersistentClient(path=DATA_DIR / "chroma_db")
-    collection = client_.get_collection(CHROMA_COLLECTION_NAME)
+    collection = client_.get_collection(CHROMA_STEAM_GAMES_COLLECTION_NAME)
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     user_query = "open world game with dragons and magic"

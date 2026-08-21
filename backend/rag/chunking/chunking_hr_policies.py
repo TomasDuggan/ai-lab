@@ -51,6 +51,3 @@ def generate_chunks():
     print(f"Promedio de chunks por política: {avg_chunks:.2f}")
     print(f"Políticas con más de 1 chunk: {stats['documents_with_multiple_chunks']}")
     print(f"Chunks guardados en: {OUTPUT_FILE.resolve()}")
-
-if __name__ == '__main__':
-    generate_chunks()

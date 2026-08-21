@@ -1,12 +1,15 @@
-from config import CHROMA_COLLECTION_NAME, DATA_DIR, PROCESSED_DIR
+from rag.config import DATA_DIR
 import json
 import numpy as np
 import chromadb
 import shutil
 
+"""
+Common logic for reading chunks and creating the chroma folder
+"""
 
 CHROMA_DB_PATH = DATA_DIR / "chroma_db"
-CHUNKS_FILE = PROCESSED_DIR / "steam_games_chunks.jsonl"
+
 
 def load_chunks(file_path: str) -> list[dict]:
     chunks = []
@@ -17,12 +20,6 @@ def load_chunks(file_path: str) -> list[dict]:
     return chunks
 
 
-"""Generate embeddings for all chunks."""
-"""
-Notes:
-embeddings => Matrix(N, X), where N is the amount of chunks and X depends on the model (all-MiniLM-L6-v2 is 384).
-It basically results in a matrix, each row is a chunk, each column holds a normalized number, a whole row represents the "semantic" of a chunk.
-"""
 def generate_embeddings_from_chunks(chunks: list[dict], model) -> tuple[list, np.ndarray]:
     texts = [chunk['text'] for chunk in chunks]
     print(f"Generating embeddings for {len(texts)} chunks...")
@@ -31,12 +28,12 @@ def generate_embeddings_from_chunks(chunks: list[dict], model) -> tuple[list, np
     return chunks, embeddings
 
 
-def get_chroma_collection():
+def get_chroma_collection(collection_name: str):
     if CHROMA_DB_PATH.exists():
         shutil.rmtree(CHROMA_DB_PATH)
 
     client = chromadb.PersistentClient(path=str(CHROMA_DB_PATH))
-    return client.get_or_create_collection(name=CHROMA_COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
+    return client.get_or_create_collection(name=collection_name, metadata={"hnsw:space": "cosine"})
 
 
 def sanitize_metadata(metadata: dict) -> dict:
@@ -63,16 +60,15 @@ def upsert_to_chroma(collection, chunks: list[dict], embeddings: np.ndarray):
     )
 
 
-def generate_embeddings(model):
-    if not CHUNKS_FILE.exists():
-        print(f"Error: {CHUNKS_FILE} not found")
+def generate_embeddings(model, chunks_file, collection_name: str):
+    if not chunks_file.exists():
+        print(f"Error: {chunks_file} not found")
         return
 
-    print(f"Loading chunks from {CHUNKS_FILE}")
-    chunks, embeddings = generate_embeddings_from_chunks(load_chunks(str(CHUNKS_FILE)), model)
+    print(f"Loading chunks from {chunks_file}")
+    chunks, embeddings = generate_embeddings_from_chunks(load_chunks(str(chunks_file)), model)
     print(f"Loaded {len(chunks)} chunks with embeddings of dimension {embeddings.shape[1]}")
 
-    collection = get_chroma_collection()
+    collection = get_chroma_collection(collection_name)
     upsert_to_chroma(collection, chunks, embeddings)
     print(f"Persisted {collection.count()} chunks to Chroma at {CHROMA_DB_PATH}")
-

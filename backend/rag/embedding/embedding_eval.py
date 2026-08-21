@@ -1,4 +1,4 @@
-from config import EMBEDDING_MODEL_NAME, CHROMA_COLLECTION_NAME, DIVERSITY_AWARE_RETREIVAL
+from rag.config import EMBEDDING_MODEL_NAME, CHROMA_STEAM_GAMES_COLLECTION_NAME, DIVERSITY_AWARE_RETREIVAL
 from retrieve import retrieve
 from generate_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
@@ -113,7 +113,7 @@ def main():
     ]
 
     client = chromadb.PersistentClient(path=DATA_DIR / "chroma_db")
-    collection = client.get_collection(CHROMA_COLLECTION_NAME)
+    collection = client.get_collection(CHROMA_STEAM_GAMES_COLLECTION_NAME)
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
 
     n_results = 10
