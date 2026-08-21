@@ -4,8 +4,9 @@ frontend/.next/
 
 # backend
 backend/venv/
-backend/__pycache__/
-backend/*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
 
 # backend - datos regenerables (pipeline de ingesta los recrea)
 backend/data/raw/

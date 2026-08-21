@@ -1,6 +1,6 @@
-from config import EMBEDDING_MODEL_NAME, CHUNK_SIZE, CHUNK_OVERLAP, DIVERSITY_AWARE_RETREIVAL, PROCESSED_DIR, CHROMA_STEAM_GAMES_COLLECTION_NAME
-from backend.rag.chunking.chunking_steam_games import generate_chunks
-from backend.rag.embedding import generate_embeddings
+from rag.config import EMBEDDING_MODEL_NAME, CHUNK_SIZE, CHUNK_OVERLAP, DIVERSITY_AWARE_RETREIVAL, PROCESSED_DIR, CHROMA_STEAM_GAMES_COLLECTION_NAME
+from rag.chunking.chunking_steam_games import generate_chunks
+from rag.embedding import generate_embeddings
 from sentence_transformers import SentenceTransformer
 
 """
