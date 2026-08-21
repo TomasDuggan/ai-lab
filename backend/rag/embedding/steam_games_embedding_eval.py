@@ -1,5 +1,5 @@
 from rag.config import EMBEDDING_MODEL_NAME, CHROMA_STEAM_GAMES_COLLECTION_NAME, DIVERSITY_AWARE_RETREIVAL
-from retrieve import retrieve
+from backend.rag.retrieve_steam_games import retrieve
 from backend.rag.generate_steam_games_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
 from config import PROCESSED_DIR, DATA_DIR
@@ -71,7 +71,7 @@ def save_evaluation_run(results: list[dict], avg_recall: float, n_results: int, 
         "cases": results,
     }
 
-    history_path = PROCESSED_DIR / "eval_history.jsonl"
+    history_path = PROCESSED_DIR / "eval_history_steam_games.jsonl"
     with open(history_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(run, ensure_ascii=False) + "\n")
 
