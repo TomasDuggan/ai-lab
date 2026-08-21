@@ -1,6 +1,6 @@
 from rag.config import EMBEDDING_MODEL_NAME, CHROMA_STEAM_GAMES_COLLECTION_NAME, DIVERSITY_AWARE_RETREIVAL
 from retrieve import retrieve
-from generate_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
+from backend.rag.generate_steam_games_rag_data import CHUNK_SIZE, CHUNK_OVERLAP
 
 from config import PROCESSED_DIR, DATA_DIR
 import json
